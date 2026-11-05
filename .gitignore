@@ -1,0 +1,5 @@
+# dữ liệu nặng, không commit
+data/*
+!data/.gitkeep
+.ipynb_checkpoints/
+__pycache__/
