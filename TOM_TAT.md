@@ -1,15 +1,15 @@
 # Tóm tắt đồ án: Phân tích đặc trưng âm thanh và đề xuất bài hát tương đồng
 
-Cập nhật: 2026-11-14 (lần 5) · Môn: Tính toán đa phương tiện
+Cập nhật: 2026-11-18 (lần 6) · Môn: Tính toán đa phương tiện
 
 > **Cách dùng file này**
 > - Mở phiên làm việc mới: đọc **mục 0** (đang ở đâu, làm gì tiếp) và **mục 10** (nhật ký) là đủ, không cần đọc lại từ đầu.
 > - Làm xong một việc: thêm một dòng vào **mục 10** (mới nhất ở trên), rồi cập nhật mục 0 nếu trạng thái thay đổi.
 > - Mục 1–9 là kiến thức nền và kết quả đã chốt; chỉ sửa khi có quyết định mới.
 
-## 0. Trạng thái hiện tại (2026-11-14)
+## 0. Trạng thái hiện tại (2026-11-18)
 
-**Đang ở bước:** đã chạy xong nhánh A trên GTZAN (Colab). Dữ liệu Jamendo đã sẵn trên máy, notebook khám phá chạy được. **Việc tiếp theo:** trích đặc trưng và phân loại mood trên tập con Jamendo (mục 7, bước 2).
+**Đang ở bước:** đã chạy xong pipeline đầy đủ trên Jamendo — trích đặc trưng (1.020 bài, cache sẵn), phân loại mood, ablation nhóm đặc trưng. Kết quả ablation cho thấy `bỏ MFCC` cho điểm tốt hơn dùng tất cả. **Việc tiếp theo:** (1) thêm ô ablation tổ hợp `spectral + rhythm + energy` vào notebook 02; (2) xây hàm demo `recommend(audio_file) → top-k bài giống` chạy trong notebook.
 
 **Cấu trúc thư mục `project/`:**
 ```
@@ -143,12 +143,60 @@ Chạy trên Colab, GTZAN tải thẳng vào Google Drive (`USE_DRIVE = True`), 
 - **GTZAN** (≈1,2 GB, Kaggle): chỉ dùng `genres_original`; bỏ file `jazz.00054.wav` (hỏng). GTZAN có lỗi nhãn và bài trùng → chỉ để chạy thử và tham khảo. Hiện chỉ có trên Google Drive.
 - Tên file trong tar có dạng `00/1009600.low.mp3`, khác cột `PATH` trong metadata (`48/948.mp3`): khi ghép đổi đuôi `.mp3` thành `.low.mp3`.
 
+## 5d. Kết quả `02_features_baseline.ipynb` trên Jamendo (đã chạy, 2026-11-18)
+
+**Pipeline:** 1.020 bài, 93 đặc trưng, LogReg + RandomForest, chia theo artist (4-fold × 5 lần lặp = 20 fold).
+
+**Kết quả chính (macro-recall):**
+
+| Mô hình | macro-F1 | macro-recall |
+|---|---|---|
+| Đoán mò | 0.256 | 0.257 |
+| Chỉ dùng thể loại | 0.263 | 0.319 |
+| **LogReg âm thanh · theo artist** | **0.356** | **0.362** |
+| RandomForest âm thanh · theo artist | 0.354 | 0.382 |
+| LogReg · ngẫu nhiên (rò rỉ) | 0.417 | 0.427 |
+
+- Rò rỉ artist: +0.065 macro-recall → luôn chia theo nghệ sĩ.
+- Trục năng lượng (arousal): recall 0.647 | trục cảm xúc (valence): 0.569 → mô hình nắm năng lượng tốt hơn cảm xúc.
+- Mô hình hơn "chỉ thể loại" ở 90% fold (LogReg) và 100% fold (RF), hiệu +0.043 / +0.063 macro-recall.
+
+**Kết quả ablation (LogReg):**
+
+| Cấu hình | macro-F1 | macro-recall |
+|---|---|---|
+| Tất cả 93 chiều | 0.356 | 0.362 |
+| chỉ spectral (22 chiều) | **0.365** | **0.374** |
+| chỉ mfcc (40 chiều) | 0.340 | 0.349 |
+| chỉ energy (4 chiều) | 0.340 | 0.348 |
+| chỉ rhythm (3 chiều) | 0.337 | 0.363 |
+| chỉ chroma (24 chiều) | 0.310 | 0.319 |
+| **bỏ mfcc (53 chiều)** | **0.385** | **0.395** |
+| bỏ chroma | 0.374 | 0.383 |
+| bỏ spectral | 0.347 | 0.354 |
+| bỏ energy | 0.357 | 0.364 |
+| bỏ rhythm | 0.332 | 0.337 |
+
+**Phát hiện quan trọng:**
+- **Bỏ MFCC điểm còn cao hơn** (+0.029 F1 so với dùng tất cả) — ngược với GTZAN. Trên task mood, MFCC nắm âm sắc/thể loại chứ không nắm mood, và đang gây nhiễu.
+- **Spectral là nhóm mạnh nhất** — 22 chiều mà cho điểm ngang hoặc hơn 93 chiều.
+- **Chroma yếu** — chỉ ngang mốc "chỉ thể loại", bỏ đi điểm tăng.
+- **Rhythm quan trọng dù chỉ 3 chiều** — bỏ rhythm là lần duy nhất điểm giảm rõ.
+- **Chưa thử:** tổ hợp `spectral + rhythm + energy` (~29 chiều).
+
+**Hệ số LR (đặc trưng quan trọng nhất từng nhóm):**
+- Vui: `onset_mean`, `mfcc_mean_00`, `rolloff_mean`
+- Căng-tối: `centroid_std`, `zcr_mean`, `contrast_std`
+- Buồn: `contrast_mean_02`, `chroma_mean_11` (hòa âm thứ)
+- Bình yên: `bandwidth_mean`, `zcr_std`
+
 ## 7. Thứ tự làm tiếp
 1. ~~Chạy pipeline trên GTZAN: trích đặc trưng, phân loại thể loại, precision@k~~ → **xong 2026-11-11** (mục 5b).
-2. **[Tiếp theo]** Chạy lại trên tập con Jamendo (`data_jamendo/index_mood.csv`, 1.020 bài): trích cùng 93 đặc trưng, phân loại mood theo split-0 (chia theo nghệ sĩ), so với mốc chỉ-thể-loại 0,50; precision@k theo mood.
-3. Test chéo GTZAN ↔ Jamendo trên các thể loại chung (đối chiếu nhãn hai bên trước); điểm thấp hơn là bình thường vì khác miền dữ liệu (cắt Jamendo thành đoạn 30 giây cho cùng cỡ).
-4. Ablation trên Jamendo (MFCC → thêm chroma, tempo, spectral) và giải thích kết quả.
-5. Nhánh B tối thiểu, rồi khảo sát người nghe, demo gộp, giao diện web mini, báo cáo.
+2. ~~Chạy pipeline trên Jamendo: trích 93 đặc trưng, phân loại mood theo artist-split, ablation~~ → **xong 2026-11-18** (mục 5d).
+3. **[Tiếp theo]** Thêm ô ablation tổ hợp `spectral + rhythm + energy` vào notebook 02; chốt vector tốt nhất.
+4. Xây hàm demo `recommend(audio_file, top_k) → danh sách bài giống + lý do` trong notebook (không cần web).
+5. ~~Test chéo GTZAN ↔ Jamendo~~ → bỏ hoặc để sau, không cần thiết cho báo cáo.
+6. Nhánh B tối thiểu (fingerprint), khảo sát người nghe, báo cáo.
 
 ## 8. Rủi ro chính
 - **Bảo mật:** Kaggle token cũ đã lộ trong notebook → thu hồi trên Kaggle, chỉ dùng Colab Secrets.
@@ -167,6 +215,8 @@ Chạy trên Colab, GTZAN tải thẳng vào Google Drive (`USE_DRIVE = True`), 
 
 ## 10. Nhật ký (mới nhất ở trên)
 Mỗi dòng: ngày · việc đã làm · kết quả / file thay đổi.
+
+- **2026-11-18** · Đọc và phân tích kỹ 2 notebook. Đọc kết quả ablation từ cache notebook 02: bỏ MFCC cho macro-F1 0.385 (tốt hơn dùng tất cả 0.356); spectral là nhóm mạnh nhất; rhythm quan trọng dù 3 chiều. Chưa thử tổ hợp `spectral + rhythm + energy`. Cập nhật `TOM_TAT.md` (thêm mục 5d, cập nhật mục 0 và 7).
 
 - **2026-11-14** · Bỏ toàn bộ phần Jamendo khỏi `01_explore-gtzan.ipynb` (ô tải 0.3/0.4, phần A, A3b, A4b, A4c, câu hỏi về mood/split); đổi tiêu đề thành notebook GTZAN, `SAMPLE_FILE` chỉ chọn bài GTZAN. 31 → 14 ô. Chạy local không lỗi (DEMO).
 

@@ -1,8 +1,11 @@
 # dữ liệu nặng, không commit
 data/*
 !data/.gitkeep
+data_jamendo/audio-low/
+data_jamendo/features_mood.csv
 .ipynb_checkpoints/
 __pycache__/
 .venv/
 .DS_Store
 *.tar
+.claude/
