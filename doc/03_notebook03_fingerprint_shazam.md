@@ -203,7 +203,7 @@ Nói ngắn gọn: notebook 02 trả lời **"bài này nghe giống cái gì"**
 
 ## Cách chạy lại
 
-1. Chạy notebook 01 trước để có `data/index_mood.csv`, và có sẵn thư mục audio (đặt biến môi trường `JAMENDO_AUDIO_DIR` nếu không để ở `data/audio-low`).
+1. Chạy notebook 01 trước để có `data_jamendo/index_mood.csv`, và có sẵn thư mục audio (đặt biến môi trường `JAMENDO_AUDIO_DIR` nếu không để ở `data_jamendo/audio-low`).
 2. Mở `notebooks/03_fingerprint_shazam.ipynb`, chạy từ trên xuống. Lần đầu mất khoảng 10 đến 20 phút tùy máy (chủ yếu là dựng chỉ mục và lặp thí nghiệm).
 3. Kết quả trung gian được lưu trong `data/fp_cache/` (không bị commit), nên lần sau chạy lại rất nhanh. Muốn tính lại từ đầu thì xóa thư mục đó.
 4. Muốn chạy thử nhanh, đặt `MAX_CATALOG = 100` ở ô cấu hình.

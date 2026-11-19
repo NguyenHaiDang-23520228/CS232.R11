@@ -7,7 +7,7 @@
 Notebook 02 trả lời một câu hỏi: chỉ nghe âm thanh, không nhìn tag thể loại, mô hình đoán đúng nhóm mood tới đâu, và có hơn mốc "chỉ dùng thể loại" hay không.
 
 Luồng xử lý, mỗi bước là một phần của notebook:
-1. Đọc data/index_mood.csv từ notebook 01: các bài sạch mood và có audio.
+1. Đọc data_jamendo/index_mood.csv từ notebook 01: các bài sạch mood và có audio.
 2. Với mỗi bài, cắt 30 giây ở giữa, tính mel-spectrogram rồi trích đặc trưng. Mỗi bài thành một vector có số chiều cố định.
 3. Lưu bảng đặc trưng ra file để không phải tính lại.
 4. Chia train/test theo artist, không theo bài.

@@ -36,8 +36,8 @@ Mỗi file có phần **"Tóm tắt 30 giây"** ở cuối để ôn nhanh.
 ## Cách chạy lại
 
 1. Cài thư viện: tạo môi trường ảo rồi `pip install -r requirements.txt` (cần thêm `joblib`; `soundfile` cần hỗ trợ MP3, tức libsndfile từ 1.1 trở lên, để notebook 03 mô phỏng nén MP3).
-2. Đặt dữ liệu: `data/autotagging_moodtheme.tsv`, `data/autotagging_genre.tsv`, và thư mục audio (`audio-low`). Nếu audio nằm ngoài repo, đặt biến môi trường `JAMENDO_AUDIO_DIR`.
-3. Chạy **theo thứ tự 01, 02, 03**. Notebook 01 tạo `data/index_mood.csv`, notebook 02 tạo bảng đặc trưng, notebook 03 dùng lại danh sách bài.
+2. Dữ liệu: metadata và `index_mood.csv` đã nằm trong `data_jamendo/` của repo; chỉ cần đặt thư mục audio (`data_jamendo/audio-low`). Nếu audio nằm ngoài repo, đặt biến môi trường `JAMENDO_AUDIO_DIR`.
+3. Chạy **theo thứ tự 01, 02, 03**. Notebook 01 tạo `data_jamendo/index_mood.csv`, notebook 02 tạo bảng đặc trưng (`data_jamendo/features_mood.csv`), notebook 03 dùng lại danh sách bài.
 4. Thời gian tham khảo: 01 khoảng vài phút; 02 khoảng vài phút trích đặc trưng (có lưu cache); 03 khoảng 10 đến 20 phút lần đầu (có cache từng bước).
 
 Ghi chú về số liệu: kết quả ở notebook 02 phụ thuộc phiên bản scikit-learn (cách chia fold theo artist có thể khác), notebook 03 phụ thuộc phiên bản thư viện âm thanh. Chạy trên máy khác có thể lệch vài điểm phần trăm; **kết luận không đổi**. Nhớ kết luận và mức chắc chắn của nó, đừng học thuộc từng con số.
